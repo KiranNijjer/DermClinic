@@ -384,7 +384,7 @@ class PatientAgent:
         self.disease = ""
         # symptoms that patient presents
         self.symptoms = ""
-        # conversation history between doctor and patient
+        # conversation history between Dermatologist and patient
         self.agent_hist = ""
         # language model backend for patient agent
         self.backend = backend_str
@@ -404,27 +404,27 @@ class PatientAgent:
         ================
         """
         if self.bias_present == "recency":
-            return "\nRecently, you had a friend with similar symptoms to yours that was diagnosed with cancer. This affects how you interact with the doctor.\n"
+            return "\nRecently, you had a friend with similar symptoms to yours that was diagnosed with cancer. This affects how you interact with the dermatologist.\n"
         elif self.bias_present == "frequency":
-            return "\nYou recently learned that most frequently, doctors diagnose this as cancer based on past cases. This affects how you interact with the doctor.\n"
+            return "\nYou recently learned that most frequently, dermatologists diagnose this as cancer based on past cases. This affects how you interact with the dermatologist.\n"
         elif self.bias_present == "false_consensus":
-            return "\nMost of your friends who heard about your symptoms believe that you have cancer. This affects how you interact with the doctor.\n"
+            return "\nMost of your friends who heard about your symptoms believe that you have cancer. This affects how you interact with the dermatologist.\n"
         elif self.bias_present == "self_diagnosis":
-            return "\nYou recently performed a thorough investigation of your symptoms online and have come to the conclusion that you should be diagnosed with cancer. While the doctor may believe otherwise you remain convinced you have cancer. This affects how you interact with the doctor.\n"
+            return "\nYou recently performed a thorough investigation of your symptoms online and have come to the conclusion that you should be diagnosed with cancer. While the dermatologist may believe otherwise you remain convinced you have cancer. This affects how you interact with the dermatologist.\n"
         elif self.bias_present == "gender":
-            return "\nYou are uncomfortable with your doctor because you find out that they are a particular gender and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they are a particular gender and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "race":
-            return "\nYou are uncomfortable with your doctor because you find out that they are a particular race and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they are a particular race and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "sexual_orientation":
-            return "\nYou are uncomfortable with your doctor because you find out that they are a particular sexual orientation and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they are a particular sexual orientation and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "cultural":
-            return "\nYou are uncomfortable with your doctor because you find out that they are from a particular culture and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they are from a particular culture and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "education":
-            return "\nYou are uncomfortable with your doctor because you find out that they went to a low ranked medical school and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they went to a low ranked medical school and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "religion":
-            return "\nYou are uncomfortable with your doctor because you find out that they believe in a particular religion and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they believe in a particular religion and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "socioeconomic":
-            return "\nYou are uncomfortable with your doctor because you find out that they are from a particular socioeconomic background and you do not trust their judgement. This affects how you interact with them.\n"
+            return "\nYou are uncomfortable with your dermatologist because you find out that they are from a particular socioeconomic background and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present is None:
             pass
         else:
@@ -432,7 +432,7 @@ class PatientAgent:
         return ""
 
     def inference_patient(self, question) -> str:
-        answer = query_model(self.backend, "\nHere is a history of your dialogue: " + self.agent_hist + "\n Here was the doctor response: " + question + "Now please continue your dialogue\nPatient: ", self.system_prompt())
+        answer = query_model(self.backend, "\nHere is a history of your dialogue: " + self.agent_hist + "\n Here was the dermatologist response: " + question + "Now please continue your dialogue\nPatient: ", self.system_prompt())
         self.agent_hist += question + "\n\n" + answer + "\n\n"
         return answer
 
@@ -452,17 +452,17 @@ class PatientAgent:
         self.agent_hist += hist_str + "\n\n"
 
 
-class DoctorAgent:
+class DermAgent:
     def __init__(self, scenario, backend_str="gpt4", max_infs=20, bias_present=None, img_request=False) -> None:
-        # number of inference calls to the doctor
+        # number of inference calls to the dermatologist
         self.infs = 0
-        # maximum number of inference calls to the doctor
+        # maximum number of inference calls to the dermatologist
         self.MAX_INFS = max_infs
-        # conversation history between doctor and patient
+        # conversation history between dermatologist and patient
         self.agent_hist = ""
-        # presentation information for doctor
+        # presentation information for dermatologist
         self.presentation = ""
-        # language model backend for doctor agent
+        # language model backend for dermatologist agent
         self.backend = backend_str
         # presentation of any form of bias
         self.bias_present = (None if bias_present == "None" else bias_present)
@@ -480,9 +480,9 @@ class DoctorAgent:
         ================
         """
         if self.bias_present == "recency":
-            return "\nRecently, you learned that a doctor with similar symptoms to the patient that diagnosed their patient with cancer. This affects how you interact with the patient.\n"
+            return "\nRecently, you learned that a dermatologist with similar symptoms to the patient that diagnosed their patient with cancer. This affects how you interact with the patient.\n"
         elif self.bias_present == "frequency":
-            return "\nYou recently learned that most frequently, doctors diagnose patients with similar symptoms with cancer based on past cases. This affects how you interact with the patient.\n"
+            return "\nYou recently learned that most frequently, dermatologists diagnose patients with similar symptoms with cancer based on past cases. This affects how you interact with the patient.\n"
         elif self.bias_present == "false_consensus":
             return "\nMost of your colleagues who heard about the patient's symptoms believe that they have cancer. This affects how you interact with the patient.\n"
         elif self.bias_present == "status_quo":
@@ -509,10 +509,10 @@ class DoctorAgent:
             print("BIAS TYPE {} NOT SUPPORTED, ignoring bias...".format(self.bias_present))
         return ""
 
-    def inference_doctor(self, question, image_requested=False) -> str:
+    def inference_dermatologist(self, question, image_requested=False) -> str:
         answer = str()
         if self.infs >= self.MAX_INFS: return "Maximum inferences reached"
-        answer = query_model(self.backend, "\nHere is a history of your dialogue: " + self.agent_hist + "\n Here was the patient response: " + question + "Now please continue your dialogue\nDoctor: ", self.system_prompt(), image_requested=image_requested, scene=self.scenario)
+        answer = query_model(self.backend, "\nHere is a history of your dialogue: " + self.agent_hist + "\n Here was the patient response: " + question + "Now please continue your dialogue\nDermatologist: ", self.system_prompt(), image_requested=image_requested, scene=self.scenario)
         self.agent_hist += question + "\n\n" + answer + "\n\n"
         self.infs += 1
         return answer
@@ -521,7 +521,7 @@ class DoctorAgent:
         bias_prompt = ""
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
-        base = "You are a doctor named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
+        base = "You are a dermatologist named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
         presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
         return base + bias_prompt + presentation
 
@@ -532,7 +532,7 @@ class DoctorAgent:
 
 class MeasurementAgent:
     def __init__(self, scenario, backend_str="gpt4") -> None:
-        # conversation history between doctor and patient
+        # conversation history between dermatologist and patient
         self.agent_hist = ""
         # presentation information for measurement 
         self.presentation = ""
@@ -545,7 +545,7 @@ class MeasurementAgent:
 
     def inference_measurement(self, question) -> str:
         answer = str()
-        answer = query_model(self.backend, "\nHere is a history of the dialogue: " + self.agent_hist + "\n Here was the doctor measurement request: " + question, self.system_prompt())
+        answer = query_model(self.backend, "\nHere is a history of the dialogue: " + self.agent_hist + "\n Here was the dermatologist measurement request: " + question, self.system_prompt())
         self.agent_hist += question + "\n\n" + answer + "\n\n"
         return answer
 
@@ -563,17 +563,17 @@ class MeasurementAgent:
 
 
 def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
-    answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the doctor dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the doctor diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
+    answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the dermatologist dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the dermatologist diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
     return answer.lower()
 
 
-def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor_llm, patient_llm, measurement_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
+def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, measurement_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
     openai.api_key = api_key
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
-    if patient_llm in replicate_llms or doctor_llm in replicate_llms:
+    if patient_llm in replicate_llms or derm_llm in replicate_llms:
         os.environ["REPLICATE_API_TOKEN"] = replicate_api_key
-    if doctor_llm in anthropic_llms:
+    if derm_llm in anthropic_llms:
         os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
 
     # Load MedQA, MIMICIV or NEJM agent case scenarios
@@ -611,48 +611,48 @@ def main(api_key, replicate_api_key, inf_type, doctor_bias, patient_bias, doctor
             scenario=scenario, 
             bias_present=patient_bias,
             backend_str=patient_llm)
-        doctor_agent = DoctorAgent(
+        derm_agent = DermAgent(
             scenario=scenario, 
-            bias_present=doctor_bias,
-            backend_str=doctor_llm,
+            bias_present=derm_bias,
+            backend_str=derm_llm,
             max_infs=total_inferences, 
             img_request=img_request)
 
-        doctor_dialogue = ""
+        derm_dialogue = ""
         for _inf_id in range(total_inferences):
             # Check for medical image request
             if dataset == "NEJM":
                 if img_request:
-                    imgs = "REQUEST IMAGES" in doctor_dialogue
+                    imgs = "REQUEST IMAGES" in derm_dialogue
                 else: imgs = True
             else: imgs = False
             # Check if final inference
             if _inf_id == total_inferences - 1:
                 pi_dialogue += "This is the final question. Please provide a diagnosis.\n"
-            # Obtain doctor dialogue (human or llm agent)
-            if inf_type == "human_doctor":
-                doctor_dialogue = input("\nQuestion for patient: ")
+            # Obtain derm dialogue (human or llm agent)
+            if inf_type == "human_derm":
+                derm_dialogue = input("\nQuestion for patient: ")
             else: 
-                doctor_dialogue = doctor_agent.inference_doctor(pi_dialogue, image_requested=imgs)
-            print("Doctor [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), doctor_dialogue)
-            # Doctor has arrived at a diagnosis, check correctness
-            if "DIAGNOSIS READY" in doctor_dialogue:
-                correctness = compare_results(doctor_dialogue, scenario.diagnosis_information(), moderator_llm, pipe) == "yes"
+                derm_dialogue = derm_agent.inference_dermatologist(pi_dialogue, image_requested=imgs)
+            print("Dermatologist [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), derm_dialogue)
+            # Dermatologist has arrived at a diagnosis, check correctness
+            if "DIAGNOSIS READY" in derm_dialogue:
+                correctness = compare_results(derm_dialogue, scenario.diagnosis_information(), moderator_llm, pipe) == "yes"
                 if correctness: total_correct += 1
                 print("\nCorrect answer:", scenario.diagnosis_information())
                 print("Scene {}, The diagnosis was ".format(_scenario_id), "CORRECT" if correctness else "INCORRECT", int((total_correct/total_presents)*100))
                 break
             # Obtain medical exam from measurement reader
-            if "REQUEST TEST" in doctor_dialogue:
-                pi_dialogue = meas_agent.inference_measurement(doctor_dialogue,)
+            if "REQUEST TEST" in derm_dialogue:
+                pi_dialogue = meas_agent.inference_measurement(derm_dialogue,)
                 print("Measurement [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 patient_agent.add_hist(pi_dialogue)
             # Obtain response from patient
             else:
                 if inf_type == "human_patient":
-                    pi_dialogue = input("\nResponse to doctor: ")
+                    pi_dialogue = input("\nResponse to dermatologist: ")
                 else:
-                    pi_dialogue = patient_agent.inference_patient(doctor_dialogue)
+                    pi_dialogue = patient_agent.inference_patient(derm_dialogue)
                 print("Patient [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 meas_agent.add_hist(pi_dialogue)
             # Prevent API timeouts
@@ -663,19 +663,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Medical Diagnosis Simulation CLI')
     parser.add_argument('--openai_api_key', type=str, required=False, help='OpenAI API Key')
     parser.add_argument('--replicate_api_key', type=str, required=False, help='Replicate API Key')
-    parser.add_argument('--inf_type', type=str, choices=['llm', 'human_doctor', 'human_patient'], default='llm')
-    parser.add_argument('--doctor_bias', type=str, help='Doctor bias type', default='None', choices=["recency", "frequency", "false_consensus", "confirmation", "status_quo", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
+    parser.add_argument('--inf_type', type=str, choices=['llm', 'human_derm', 'human_patient'], default='llm')
+    parser.add_argument('--derm_bias', type=str, help='Dermatologist bias type', default='None', choices=["recency", "frequency", "false_consensus", "confirmation", "status_quo", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
     parser.add_argument('--patient_bias', type=str, help='Patient bias type', default='None', choices=["recency", "frequency", "false_consensus", "self_diagnosis", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
-    parser.add_argument('--doctor_llm', type=str, default='gpt4')
+    parser.add_argument('--derm_llm', type=str, default='gpt4')
     parser.add_argument('--patient_llm', type=str, default='gpt4')
     parser.add_argument('--measurement_llm', type=str, default='gpt4')
     parser.add_argument('--moderator_llm', type=str, default='gpt4')
     parser.add_argument('--agent_dataset', type=str, default='MedQA') # MedQA, MIMICIV or NEJM
-    parser.add_argument('--doctor_image_request', type=bool, default=False) # whether images must be requested or are provided
+    parser.add_argument('--derm_image_request', type=bool, default=False) # whether images must be requested or are provided
     parser.add_argument('--num_scenarios', type=int, default=None, required=False, help='Number of scenarios to simulate')
-    parser.add_argument('--total_inferences', type=int, default=20, required=False, help='Number of inferences between patient and doctor')
+    parser.add_argument('--total_inferences', type=int, default=20, required=False, help='Number of inferences between patient and dermatologist')
     parser.add_argument('--anthropic_api_key', type=str, default=None, required=False, help='Anthropic API key for Claude 3.5 Sonnet')
     
     args = parser.parse_args()
 
-    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.doctor_bias, args.patient_bias, args.doctor_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.doctor_image_request, args.total_inferences, args.anthropic_api_key)
+    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.derm_bias, args.patient_bias, args.derm_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.derm_image_request, args.total_inferences, args.anthropic_api_key)
