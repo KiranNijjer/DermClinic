@@ -530,7 +530,7 @@ class DermAgent:
         self.presentation = self.scenario.examiner_information()
 
 
-class MeasurementAgent:
+class PathologistAgent:
     def __init__(self, scenario, backend_str="gpt4") -> None:
         # conversation history between dermatologist and patient
         self.agent_hist = ""
@@ -567,7 +567,7 @@ def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     return answer.lower()
 
 
-def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, measurement_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
+def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
     openai.api_key = api_key
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
@@ -604,9 +604,9 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
         # Initialize scenarios (MedQA/NEJM)
         scenario =  scenario_loader.get_scenario(id=_scenario_id)
         # Initialize agents
-        meas_agent = MeasurementAgent(
+        pathologist_agent = PathologistAgent(
             scenario=scenario,
-            backend_str=measurement_llm)
+            backend_str=pathologist_llm)
         patient_agent = PatientAgent(
             scenario=scenario, 
             bias_present=patient_bias,
@@ -642,9 +642,9 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 print("\nCorrect answer:", scenario.diagnosis_information())
                 print("Scene {}, The diagnosis was ".format(_scenario_id), "CORRECT" if correctness else "INCORRECT", int((total_correct/total_presents)*100))
                 break
-            # Obtain medical exam from measurement reader
+            # Obtain medical exam from Pathologist
             if "REQUEST TEST" in derm_dialogue:
-                pi_dialogue = meas_agent.inference_measurement(derm_dialogue,)
+                pi_dialogue = pathologist_agent.inference_measurement(derm_dialogue,)
                 print("Measurement [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 patient_agent.add_hist(pi_dialogue)
             # Obtain response from patient
@@ -654,7 +654,7 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 else:
                     pi_dialogue = patient_agent.inference_patient(derm_dialogue)
                 print("Patient [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
-                meas_agent.add_hist(pi_dialogue)
+                pathologist_agent.add_hist(pi_dialogue)
             # Prevent API timeouts
             time.sleep(1.0)
 
@@ -668,7 +668,7 @@ if __name__ == "__main__":
     parser.add_argument('--patient_bias', type=str, help='Patient bias type', default='None', choices=["recency", "frequency", "false_consensus", "self_diagnosis", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
     parser.add_argument('--derm_llm', type=str, default='gpt4')
     parser.add_argument('--patient_llm', type=str, default='gpt4')
-    parser.add_argument('--measurement_llm', type=str, default='gpt4')
+    parser.add_argument('--pathologist_llm', type=str, default='gpt4')
     parser.add_argument('--moderator_llm', type=str, default='gpt4')
     parser.add_argument('--agent_dataset', type=str, default='MedQA') # MedQA, MIMICIV or NEJM
     parser.add_argument('--derm_image_request', type=bool, default=False) # whether images must be requested or are provided
@@ -678,4 +678,4 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.derm_bias, args.patient_bias, args.derm_llm, args.patient_llm, args.measurement_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.derm_image_request, args.total_inferences, args.anthropic_api_key)
+    main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.derm_bias, args.patient_bias, args.derm_llm, args.patient_llm, args.pathologist_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.derm_image_request, args.total_inferences, args.anthropic_api_key)
