@@ -561,6 +561,37 @@ class PathologistAgent:
         self.agent_hist = ""
         self.information = self.scenario.exam_information()
 
+class MohsSurgeonAgent:
+    def __init__(self, scenario, backend_str="gpt4") -> None:
+        # conversation history between dermatologist and patient
+        self.agent_hist = ""
+        # presentation information for measurement 
+        self.presentation = ""
+        # language model backend for measurement agent
+        self.backend = backend_str
+        # prepare initial conditions for LLM
+        self.scenario = scenario
+        self.pipe = None
+        self.reset()
+
+    def inference_measurement(self, question) -> str:
+        answer = str()
+        answer = query_model(self.backend, "\nHere is a history of the dialogue: " + self.agent_hist + "\n Here was the dermatologist measurement request: " + question, self.system_prompt())
+        self.agent_hist += question + "\n\n" + answer + "\n\n"
+        return answer
+
+    def system_prompt(self) -> str:
+        base = "You are a Mohs surgeon who responds with medical test results. Please respond in the format \"RESULTS: [results here]\""
+        presentation = "\n\nBelow is all of the information you have. {}. \n\n If the requested results are not in your data then you can respond with NORMAL READINGS.".format(self.information)
+        return base + presentation
+    
+    def add_hist(self, hist_str) -> None:
+        self.agent_hist += hist_str + "\n\n"
+
+    def reset(self) -> None:
+        self.agent_hist = ""
+        self.information = self.scenario.exam_information()
+
 
 def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     answer = query_model(moderator_llm, "\nHere is the correct diagnosis: " + correct_diagnosis + "\n Here was the dermatologist dialogue: " + diagnosis + "\nAre these the same?", "You are responsible for determining if the corrent diagnosis and the dermatologist diagnosis are the same disease. Please respond only with Yes or No. Nothing else.")
