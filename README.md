@@ -1,4 +1,3 @@
-# AgentClinic: a multimodal agent benchmark to evaluate AI in simulated clinical environments
 
 <p align="center">
   <img src="media/mainfigure.png" alt="Demonstration of the flow of AgentClinic" style="width: 99%;">
