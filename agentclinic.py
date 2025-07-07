@@ -440,7 +440,7 @@ class PatientAgent:
         bias_prompt = ""
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
-        base = """You are a patient in a clinic who only responds in the form of dialogue. You are being inspected by a doctor who will ask you questions and will perform exams on you in order to understand your disease. Your answer will only be 1-3 sentences in length."""
+        base = """You are a patient in a clinic who only responds in the form of dialogue. You are being inspected by a dermatologist who will ask you questions and will perform exams on you in order to understand your disease. Your answer will only be 1-3 sentences in length."""
         symptoms = "\n\nBelow is all of your information. {}. \n\n Remember, you must not reveal your disease explicitly but may only convey the symptoms you have in the form of dialogue if you are asked.".format(self.symptoms)
         return base + bias_prompt + symptoms
     
