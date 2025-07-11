@@ -648,7 +648,8 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
             backend_str=derm_llm,
             max_infs=total_inferences, 
             img_request=img_request)
-
+        
+        inference_counts = []
         derm_dialogue = ""
         for _inf_id in range(total_inferences):
             # Check for medical image request
@@ -668,10 +669,12 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
             print("Dermatologist [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), derm_dialogue)
             # Dermatologist has arrived at a diagnosis, check correctness
             if "DIAGNOSIS READY" in derm_dialogue:
+                inference_counts.append(_inf_id + 1)  # because loop starts at 0
                 correctness = compare_results(derm_dialogue, scenario.diagnosis_information(), moderator_llm, pipe) == "yes"
                 if correctness: total_correct += 1
                 print("\nCorrect answer:", scenario.diagnosis_information())
                 print("Scene {}, The diagnosis was ".format(_scenario_id), "CORRECT" if correctness else "INCORRECT", int((total_correct/total_presents)*100))
+                print(f"Inferences used: {_inf_id + 1}\n")
                 break
             # Obtain medical exam from Pathologist
             if "REQUEST TEST" in derm_dialogue:
@@ -688,6 +691,24 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 pathologist_agent.add_hist(pi_dialogue)
             # Prevent API timeouts
             time.sleep(1.0)
+
+    #Printing Diagnostic accuracy
+    print("\n====================")
+    print("Simulation Complete")
+    print(f"Total Scenarios Attempted: {total_presents}")
+    print(f"Correct Diagnoses: {total_correct}")
+    print(f"Accuracy: {100 * total_correct / total_presents:.2f}%")
+    print("====================")
+    
+    #Printing Turns
+    avg_inferences = sum(inference_counts) / len(inference_counts) if inference_counts else 0
+    print("\n====================")
+    print("Simulation Complete")
+    print(f"Total Scenarios Attempted: {total_presents}")
+    print(f"Correct Diagnoses: {total_correct}")
+    print(f"Accuracy: {100 * total_correct / total_presents:.2f}%")
+    print(f"Average Inferences to Diagnose: {avg_inferences:.2f}")
+    print("====================")
 
 
 if __name__ == "__main__":
