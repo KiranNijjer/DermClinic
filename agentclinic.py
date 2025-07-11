@@ -471,22 +471,72 @@ class DermAgent:
         self.reset()
         self.pipe = None
         self.img_request = img_request
-        self.biases = ["recency", "frequency", "false_consensus", "confirmation", "status_quo", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"]
-
+        self.biases = [
+    "recency", "frequency", "false_consensus", "confirmation", "status_quo",
+    "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic",
+    "insurance_status", "insurance_comparison", "healthcare_access", "structural_bias",
+    "housing_insecurity", "immigration_status", "language_barrier", "digital_literacy",
+    "transportation_insecurity", "occupational_bias", "private_insurance_preference"
+    ]
+        
     def generate_bias(self) -> str:
         """ 
-        ================
-        Cognitive biases 
-        ================
+        ========================
+        Systemic / Structural Biases
+        ========================
         """
-        if self.bias_present == "recency":
-            return "\nRecently, you learned that a dermatologist with similar symptoms to the patient that diagnosed their patient with cancer. This affects how you interact with the patient.\n"
+
+        if self.bias_present == "insurance_status":
+            return "\nYou realize the patient does not have private insurance and is covered by Medicaid. You assume they may not follow up or afford the full treatment plan, which affects how thoroughly you investigate their condition.\n"
+
+        elif self.bias_present == "healthcare_access":
+            return "\nYou learn the patient comes from a medically underserved area with limited access to dermatology care. You subconsciously attribute their condition to neglect or lack of education, which influences your judgment.\n"
+
+        elif self.bias_present == "structural_bias":
+            return "\nYou subconsciously associate patients from low-income, high-crime areas with poor health compliance or exaggerated symptoms. This affects the level of seriousness you give to their concerns.\n"
+
+        elif self.bias_present == "housing_insecurity":
+            return "\nYou learn the patient has no stable housing. You assume their condition may be due to unsanitary living conditions or lifestyle, and this affects your perception of their case.\n"
+
+        elif self.bias_present == "immigration_status":
+            return "\nYou suspect the patient may be undocumented or recently immigrated, and you assume they may avoid long-term care. This affects how thoroughly you evaluate their condition.\n"
+
+        elif self.bias_present == "language_barrier":
+            return "\nThe patient speaks limited English and is using an interpreter. You assume communication gaps will reduce the value of further questioning, and this limits how much time you invest.\n"
+
+        elif self.bias_present == "digital_literacy":
+            return "\nYou realize the patient has no access to email, smartphones, or online health tools. You assume they will not follow up electronically, and this affects how you provide instructions or care.\n"
+
+        elif self.bias_present == "transportation_insecurity":
+            return "\nYou learn the patient has no consistent access to transportation. You assume they are unlikely to attend future follow-ups, and this influences your decision-making.\n"
+
+        elif self.bias_present == "occupational_bias":
+            return "\nYou find out the patient works in manual labor and assume they may not prioritize their health. This affects how you evaluate the urgency of their condition.\n"
+
+        elif self.bias_present == "insurance_comparison":
+            return (
+                "\nYou notice that this patient is on Medicaid, and you recall that patients with private insurance tend to have better outcomes and follow-up rates. "
+                "This comparison leads you to subconsciously prioritize privately insured patients and view Medicaid patients as less likely to follow treatment plans. "
+                "This affects how seriously you take the patient and how much effort you invest in the diagnosis.\n"
+            )
+        
+        elif self.bias_present == "private_insurance_preference":
+            return (
+                "\nYou learn that the patient has premium private insurance. "
+                "You subconsciously associate this with better health literacy, higher compliance, and faster access to follow-up care. "
+                "This leads you to take their case more seriously and invest extra time and resources into their evaluation.\n"
+            )
+        # ========================
+        # Cognitive Biases (not in use, but kept for reference)
+        # ========================
+        elif self.bias_present == "recency":
+            return "\nRecently, you learned that a dermatologist with similar symptoms to the patient diagnosed their patient with cancer. This affects how you interact with the patient.\n"
         elif self.bias_present == "frequency":
             return "\nYou recently learned that most frequently, dermatologists diagnose patients with similar symptoms with cancer based on past cases. This affects how you interact with the patient.\n"
         elif self.bias_present == "false_consensus":
             return "\nMost of your colleagues who heard about the patient's symptoms believe that they have cancer. This affects how you interact with the patient.\n"
         elif self.bias_present == "status_quo":
-            return "\nYour hosptial has been diagnosing these patient's symptoms with cancer for the past 10 years. This affects how you interact with the patient.\n"
+            return "\nYour hospital has been diagnosing these patient's symptoms with cancer for the past 10 years. This affects how you interact with the patient.\n"
         elif self.bias_present == "confirmation":
             return "\nYou are initially confident that the patient has cancer. This affects how you interact with the patient.\n"
         elif self.bias_present == "gender":
@@ -503,11 +553,13 @@ class DermAgent:
             return "\nYou are uncomfortable with your patient because you find out that they believe in a particular religion and you do not trust their judgement. This affects how you interact with them.\n"
         elif self.bias_present == "socioeconomic":
             return "\nYou are uncomfortable with your patient because you find out that they are from a particular socioeconomic background and you do not trust their judgement. This affects how you interact with them.\n"
+
         elif self.bias_present is None:
             pass
         else:
             print("BIAS TYPE {} NOT SUPPORTED, ignoring bias...".format(self.bias_present))
         return ""
+
 
     def inference_dermatologist(self, question, image_requested=False) -> str:
         answer = str()
@@ -521,8 +573,25 @@ class DermAgent:
         bias_prompt = ""
         if self.bias_present is not None:
             bias_prompt = self.generate_bias()
-        base = "You are a dermatologist named Dr. Agent who only responds in the form of dialogue. You are inspecting a patient who you will ask questions in order to understand their disease. You are only allowed to ask {} questions total before you must make a decision. You have asked {} questions so far. You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". Your dialogue will only be 1-3 sentences in length. Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"".format(self.MAX_INFS, self.infs) + ("You may also request medical images related to the disease to be returned with \"REQUEST IMAGES\"." if self.img_request else "")
-        presentation = "\n\nBelow is all of the information you have. {}. \n\n Remember, you must discover their disease by asking them questions. You are also able to provide exams.".format(self.presentation)
+
+        base = (
+            "You are a dermatologist named Dr. Agent who only responds in the form of dialogue. "
+            "You are inspecting a patient and must ask questions to understand their disease. "
+            "You are only allowed to ask {} questions total before you must make a decision. "
+            "You have asked {} questions so far. "
+            "You can request test results using the format \"REQUEST TEST: [test]\". For example, \"REQUEST TEST: Chest_X-Ray\". "
+            "You may also consult a Mohs surgeon for surgical input using the format \"REQUEST MOHS: [your question]\". "
+            .format(self.MAX_INFS, self.infs)
+            + ("You may also request medical images related to the disease using \"REQUEST IMAGES\". " if self.img_request else "")
+            + "Your dialogue will only be 1–3 sentences in length. "
+            "Once you have decided to make a diagnosis please type \"DIAGNOSIS READY: [diagnosis here]\"."
+        )
+
+        presentation = (
+            "\n\nBelow is all of the information you have. {} "
+            "\n\nRemember, you must discover their disease by asking them questions. You are also able to request exams, images, and surgical input if needed.".format(self.presentation)
+        )
+
         return base + bias_prompt + presentation
 
     def reset(self) -> None:
@@ -574,15 +643,27 @@ class MohsSurgeonAgent:
         self.pipe = None
         self.reset()
 
-    def inference_measurement(self, question) -> str:
-        answer = str()
-        answer = query_model(self.backend, "\nHere is a history of the dialogue: " + self.agent_hist + "\n Here was the dermatologist measurement request: " + question, self.system_prompt())
-        self.agent_hist += question + "\n\n" + answer + "\n\n"
+    def inference_specialist(self, derm_consult_message):
+        self.add_hist(f"Derm: {derm_consult_message}")
+
+        prompt = f"\nHere is the history of the case discussion:\n{self.agent_hist}\nHere was the primary dermatologist's latest message:\n{derm_consult_message}\nPlease provide your specialist input."
+        answer = query_model(prompt, self.system_prompt())
+
+        self.add_hist(f"Answer: {answer}")
         return answer
 
     def system_prompt(self) -> str:
-        base = "You are a Mohs surgeon who responds with medical test results. Please respond in the format \"RESULTS: [results here]\""
-        presentation = "\n\nBelow is all of the information you have. {}. \n\n If the requested results are not in your data then you can respond with NORMAL READINGS.".format(self.information)
+        base = (
+        "You are a Mohs micrographic surgeon providing intraoperative consultation for skin cancer cases. "
+        "You respond only to dermatologic surgery-related queries. Base your answers strictly on the known patient exam findings. "
+        "You may comment on tumor depth, margin status (lateral or deep), tissue layers involved, or presence of perineural or lymphovascular invasion, "
+        "but only if such findings are present in the data provided."
+    )
+        presentation = (
+            "\n\nBelow is all of the patient information you have: {} "
+            "\n\nIf there are no findings relevant to surgical pathology, respond with: "
+            "\"RESULTS: NO SURGICAL FINDINGS DETECTED\".".format(self.information)
+        )
         return base + presentation
     
     def add_hist(self, hist_str) -> None:
@@ -598,7 +679,7 @@ def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
     return answer.lower()
 
 
-def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None):
+def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None, mohs_llm='gpt4'):
     openai.api_key = api_key
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
@@ -622,6 +703,9 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
         raise Exception("Dataset {} does not exist".format(str(dataset)))
     total_correct = 0
     total_presents = 0
+    total_path_calls = 0
+    total_mohs_calls = 0
+    inference_counts = []
 
     # Pipeline for huggingface models
     if "HF_" in moderator_llm:
@@ -648,9 +732,15 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
             backend_str=derm_llm,
             max_infs=total_inferences, 
             img_request=img_request)
+        mohs_agent = MohsSurgeonAgent(
+            scenario=scenario,
+            backend_str=mohs_llm 
+        )
         
-        inference_counts = []
+        
         derm_dialogue = ""
+        path_calls = 0
+        mohs_calls = 0
         for _inf_id in range(total_inferences):
             # Check for medical image request
             if dataset == "NEJM":
@@ -676,11 +766,20 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 print("Scene {}, The diagnosis was ".format(_scenario_id), "CORRECT" if correctness else "INCORRECT", int((total_correct/total_presents)*100))
                 print(f"Inferences used: {_inf_id + 1}\n")
                 break
+            if "REQUEST MOHS" in derm_dialogue.upper():
+                mohs_response = mohs_agent.inference_measurement(derm_dialogue)
+                print("Mohs Surgeon [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), mohs_response)
+                patient_agent.add_hist(mohs_response)
+                pathologist_agent.add_hist(mohs_response)
+                pi_dialogue = mohs_response
+                mohs_calls += 1
+                continue
             # Obtain medical exam from Pathologist
             if "REQUEST TEST" in derm_dialogue:
                 pi_dialogue = pathologist_agent.inference_measurement(derm_dialogue,)
                 print("Measurement [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), pi_dialogue)
                 patient_agent.add_hist(pi_dialogue)
+                path_calls += 1
             # Obtain response from patient
             else:
                 if inf_type == "human_patient":
@@ -691,23 +790,21 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 pathologist_agent.add_hist(pi_dialogue)
             # Prevent API timeouts
             time.sleep(1.0)
+        total_mohs_calls += mohs_calls
+        total_path_calls += path_calls
 
-    #Printing Diagnostic accuracy
-    print("\n====================")
-    print("Simulation Complete")
-    print(f"Total Scenarios Attempted: {total_presents}")
-    print(f"Correct Diagnoses: {total_correct}")
-    print(f"Accuracy: {100 * total_correct / total_presents:.2f}%")
-    print("====================")
-    
     #Printing Turns
     avg_inferences = sum(inference_counts) / len(inference_counts) if inference_counts else 0
+    avg_mohs_calls = total_mohs_calls / total_presents if total_presents > 0 else 0
+    avg_path_calls = total_path_calls / total_presents if total_presents > 0 else 0
     print("\n====================")
     print("Simulation Complete")
     print(f"Total Scenarios Attempted: {total_presents}")
     print(f"Correct Diagnoses: {total_correct}")
     print(f"Accuracy: {100 * total_correct / total_presents:.2f}%")
     print(f"Average Inferences to Diagnose: {avg_inferences:.2f}")
+    print(f"Average Mohs Surgeon Calls per Scenario: {avg_mohs_calls:.2f}")
+    print(f"Average Pathologist Calls per Scenario: {avg_path_calls:.2f}")
     print("====================")
 
 
@@ -727,7 +824,8 @@ if __name__ == "__main__":
     parser.add_argument('--num_scenarios', type=int, default=None, required=False, help='Number of scenarios to simulate')
     parser.add_argument('--total_inferences', type=int, default=20, required=False, help='Number of inferences between patient and dermatologist')
     parser.add_argument('--anthropic_api_key', type=str, default=None, required=False, help='Anthropic API key for Claude 3.5 Sonnet')
-    
+    parser.add_argument('--mohs_llm', type=str, default='gpt4', help='LLM used by the Mohs Surgeon')
+
     args = parser.parse_args()
 
     main(args.openai_api_key, args.replicate_api_key, args.inf_type, args.derm_bias, args.patient_bias, args.derm_llm, args.patient_llm, args.pathologist_llm, args.moderator_llm, args.num_scenarios, args.agent_dataset, args.derm_image_request, args.total_inferences, args.anthropic_api_key)
