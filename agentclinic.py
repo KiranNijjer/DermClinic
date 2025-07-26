@@ -767,7 +767,7 @@ def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm
                 print(f"Inferences used: {_inf_id + 1}\n")
                 break
             if "REQUEST MOHS" in derm_dialogue.upper():
-                mohs_response = mohs_agent.inference_measurement(derm_dialogue)
+                mohs_response = mohs_agent.inference_specialist(derm_dialogue)
                 print("Mohs Surgeon [{}%]:".format(int(((_inf_id+1)/total_inferences)*100)), mohs_response)
                 patient_agent.add_hist(mohs_response)
                 pathologist_agent.add_hist(mohs_response)
