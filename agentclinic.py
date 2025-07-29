@@ -480,7 +480,7 @@ class DermAgent:
         ================
         """
         if self.bias_present == "recency":
-            return "\nRecently, you learned that a dermatologist with similar symptoms to the patient that diagnosed their patient with cancer. This affects how you interact with the patient.\n"
+            return "\n The Doctor Agent saw three patients with benign seborrheic keratoses. Now, the doctor receives a new case with a similar-looking lesion. Subconsciously influenced by the earlier cases, the doctor assumes the lesion is also benign and does not pursue a biopsy — missing a diagnosis of early-stage melanoma. .\n"
         elif self.bias_present == "frequency":
             return "\nYou recently learned that most frequently, dermatologists diagnose patients with similar symptoms with cancer based on past cases. This affects how you interact with the patient.\n"
         elif self.bias_present == "false_consensus":
