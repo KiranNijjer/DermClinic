@@ -1,9 +1,7 @@
 # AgentClinic: a multimodal agent benchmark to evaluate AI in simulated clinical environments
-
 <p align="center">
   <img src="media/mainfigure.png" alt="Demonstration of the flow of AgentClinic" style="width: 99%;">
 </p>
-
 ## Release
 - [09/13/2024] 🍓 We release new results and support for o1!
 - [08/17/2024] 🎆 Major updates 🎇
