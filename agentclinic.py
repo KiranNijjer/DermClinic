@@ -366,7 +366,7 @@ class ScenarioNEJM:
 
 class ScenarioLoaderNEJM:
     def __init__(self) -> None:
-        with open("medqa.jsonl", "r") as f:
+        with open("nejm.jsonl", "r") as f:
             self.scenario_strs = [json.loads(line) for line in f]
         self.scenarios = [ScenarioNEJM(_str) for _str in self.scenario_strs]
         self.num_scenarios = len(self.scenarios)
@@ -473,10 +473,10 @@ class DermAgent:
         self.pipe = None
         self.img_request = img_request
         self.biases = [
-    "recency", "frequency", "false_consensus", "confirmation", "status_quo",
-    "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic",
-    "institutional_bias", "socioeconomic_status", "geographic_bias", "cultural_linguistic_bias", "race_bias"
-    ]
+  "recency","frequency","false_consensus","confirmation","status_quo",
+  "gender","race","sexual_orientation","cultural","education","religion","socioeconomic",
+  "institutional_bias","socioeconomic_status","geographic_bias","cultural_linguistic_bias","race_bias"
+]
         
     def generate_bias(self) -> str:
         """ 
@@ -622,7 +622,7 @@ class MohsSurgeonAgent:
         self.add_hist(f"Derm: {derm_consult_message}")
 
         prompt = f"\nHere is the history of the case discussion:\n{self.agent_hist}\nHere was the primary dermatologist's latest message:\n{derm_consult_message}\nPlease provide your specialist input."
-        answer = query_model(prompt, self.system_prompt())
+        answer = query_model(self.backend, prompt, self.system_prompt())
 
         self.add_hist(f"Answer: {answer}")
         return answer
