@@ -4,7 +4,7 @@ import os
 from transformers import pipeline
 import re, random, time, json, replicate, os
 from openai import OpenAI
-client = OpenAI(api_key=(""))  # will be initialized in main()
+client =  # will be initialized in main()
 
 llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
@@ -56,11 +56,11 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                                 }
                             ]
                         }],
-                        temperature=0.05,
-                        max_output_tokens=200,
+
+                        max_completion_tokens=200,
                     )
                     # Responses API returns messages under output_text (or output[0].content etc. depending on SDK)
-                    ans = getattr(resp, "output_text", None) or resp.output[0].content[0].text
+                    ans = resp.output_text
                     return re.sub(r"\s+", " ", ans)
                 if model_str == "gpt4v":
                     resp = client.chat.completions.create(
@@ -134,21 +134,36 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 ]
 
             if model_str in {"gpt-5", "gpt-5-mini", "gpt-5-nano"}:
-                resp = client.chat.completions.create(
-                model=model_str,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.05,
-                max_tokens=200,
-            )
-                ans = resp.choices[0].message.content
+                system_prompt += (
+    " Respond in 1–3 sentences maximum. "
+    "If brevity is critical, respond in a single sentence."
+)
+                resp = client.responses.create(
+                    model=model_str,
+                    input=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": prompt}
+                        ],
+                    }],
+                   metadata={
+        "verbosity": "low"   # <- pass inside metadata
+    }
+                )
+                ans = None
+                if hasattr(resp, "output_text") and resp.output_text:
+                    ans = resp.output_text
+                else:
+                    try:
+                        ans = resp.output[0].content[0].text
+                    except Exception:
+                        ans = "[NO OUTPUT]"
+
                 return re.sub(r"\s+", " ", ans)
 
             if model_str == "gpt4":
                 resp = client.chat.completions.create(
-                model="gpt-4o",  # use a current model id
+                model="gpt-4",  # use a current model id
                 messages=[{"role":"system","content":system_prompt},
                         {"role":"user","content":prompt}],
                 temperature=0.05, max_tokens=200
@@ -176,9 +191,9 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
-            elif model_str == "o1-preview":
+            elif model_str == "o1":
                 resp = client.chat.completions.create(
-                    model="o1-preview-2024-09-12",
+                    model="o1",
                     messages=[{"role":"system","content":system_prompt},
                             {"role":"user","content":prompt}],
                     temperature=0.05, max_tokens=200
@@ -864,7 +879,7 @@ if __name__ == "__main__":
     parser.add_argument('--openai_api_key', type=str, required=False, help='OpenAI API Key')
     parser.add_argument('--replicate_api_key', type=str, required=False, help='Replicate API Key')
     parser.add_argument('--inf_type', type=str, choices=['llm', 'human_derm', 'human_patient'], default='llm')
-    parser.add_argument('--derm_bias', type=str, help='Dermatologist bias type', default='None', choices=["recency", "frequency", "false_consensus", "confirmation", "status_quo", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
+    parser.add_argument('--derm_bias', type=str, help='Dermatologist bias type', default='None', choices=["recency", "frequency", "false_consensus", "confirmation", "status_quo", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic", "institutional_bias","socioeconomic_status","geographic_bias","cultural_linguistic_bias","race_bias"])
     parser.add_argument('--patient_bias', type=str, help='Patient bias type', default='None', choices=["recency", "frequency", "false_consensus", "self_diagnosis", "gender", "race", "sexual_orientation", "cultural", "education", "religion", "socioeconomic"])
     parser.add_argument('--derm_llm', type=str, default='gpt4')
     parser.add_argument('--patient_llm', type=str, default='gpt4')
