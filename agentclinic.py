@@ -22,6 +22,7 @@ def inference_huggingface(prompt, pipe):
 
 def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 image_requested=False, scene=None, max_prompt_len=2**14, clip_prompt=False):
+    global client 
     SUPPORTED = {
         "gpt-5", "gpt-5-mini", "gpt-5-nano",
         "gpt4", "gpt3.5", "gpt4o", "gpt-4o-mini", "gpt4v",
@@ -176,7 +177,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "claude3.5sonnet":
-                client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+                # client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
                 message = client.messages.create(
                     model="claude-3-5-sonnet-20240620",
                     system=system_prompt, max_tokens=256,
@@ -709,6 +710,7 @@ def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
 
 
 def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None, mohs_llm='gpt4'):
+    global client 
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
     if patient_llm in replicate_llms or derm_llm in replicate_llms:
