@@ -1,7 +1,10 @@
 import argparse
 import anthropic
+import os
 from transformers import pipeline
-import openai, re, random, time, json, replicate, os
+import re, random, time, json, replicate, os
+from openai import OpenAI
+client = None  # will be initialized in main()
 
 llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
@@ -35,40 +38,71 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
             # -------------- Vision branch --------------
             if image_requested:
                 # GPT-5 (nano/mini/base) handled as text here; block vision for them explicitly
-                if model_str in {"gpt-5", "gpt-5-mini", "gpt-5-nano"}:
-                    raise Exception(f"{model_str} not enabled for vision in this helper. "
-                                    "Use gpt-4o or gpt-4-vision-preview.")
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user",
-                     "content": [
-                         {"type": "text", "text": prompt},
-                         {"type": "image_url", "image_url": {"url": f"{scene.image_url}"}}
-                     ]}
-                ]
+                if model_str in {"gpt-5","gpt-5-mini","gpt-5-nano"}:
+                    raise ValueError(f"{model_str} not enabled for vision in this helper. Use gpt-4o/mini.")
                 if model_str == "gpt4v":
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4-vision-preview", messages=messages,
-                        temperature=0.05, max_tokens=200
+                    resp = client.chat.completions.create(
+                        model="gpt-4v",  # or "gpt-4o-mini"
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                            ]},
+                        ],
+                        temperature=0.05,
+                        max_tokens=200,
                     )
+                    ans = resp.choices[0].message.content
+                    return re.sub(r"\s+", " ", ans)
                 elif model_str == "gpt-4o-mini":
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4o-mini", messages=messages,
-                        temperature=0.05, max_tokens=200
+                    resp = client.chat.completions.create(
+                        model="gpt-4o-mini",  # or "gpt-4o-mini"
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                            ]},
+                        ],
+                        temperature=0.05,
+                        max_tokens=200,
                     )
+                    ans = resp.choices[0].message.content
+                    return re.sub(r"\s+", " ", ans)
                 elif model_str == "gpt4":
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4-turbo", messages=messages,
-                        temperature=0.05, max_tokens=200
+                    resp = client.chat.completions.create(
+                        model="gpt-4",  # or "gpt-4o-mini"
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                            ]},
+                        ],
+                        temperature=0.05,
+                        max_tokens=200,
                     )
+                    ans = resp.choices[0].message.content
+                    return re.sub(r"\s+", " ", ans)
                 elif model_str == "gpt4o":
-                    response = openai.ChatCompletion.create(
-                        model="gpt-4o", messages=messages,
-                        temperature=0.05, max_tokens=200
+                    resp = client.chat.completions.create(
+                        model="gpt-4o",  # or "gpt-4o-mini"
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                            ]},
+                        ],
+                        temperature=0.05,
+                        max_tokens=200,
                     )
+                    ans = resp.choices[0].message.content
+                    return re.sub(r"\s+", " ", ans)
                 else:
                     raise Exception(f"Vision not supported for model: {model_str}")
-                return response["choices"][0]["message"]["content"]
+                
 
             # -------------- Text branch --------------
             def _msg():
@@ -78,51 +112,67 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 ]
 
             if model_str in {"gpt-5", "gpt-5-mini", "gpt-5-nano"}:
-                response = openai.ChatCompletion.create(
-                    model=model_str, messages=_msg(),
-                    temperature=0.05, max_tokens=200
-                )
-                ans = response["choices"][0]["message"]["content"]
+                resp = client.chat.completions.create(
+                model=model_str,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.05,
+                max_tokens=200,
+            )
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
             if model_str == "gpt4":
-                response = openai.ChatCompletion.create(
-                    model="gpt-4-turbo-preview", messages=_msg(),
-                    temperature=0.05, max_tokens=200
-                )
-                ans = response["choices"][0]["message"]["content"]
+                resp = client.chat.completions.create(
+                model="gpt-4o",  # use a current model id
+                messages=[{"role":"system","content":system_prompt},
+                        {"role":"user","content":prompt}],
+                temperature=0.05, max_tokens=200
+            )
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "gpt4v":
-                response = openai.ChatCompletion.create(
-                    model="gpt-4-vision-preview", messages=_msg(),
-                    temperature=0.05, max_tokens=200
-                )
-                ans = response["choices"][0]["message"]["content"]
+                resp = client.chat.completions.create(
+                model="gpt-4-vision-preview",  # use a current model id
+                messages=[{"role":"system","content":system_prompt},
+                        {"role":"user","content":prompt}],
+                temperature=0.05, max_tokens=200
+            )
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "gpt-4o-mini":
-                response = openai.ChatCompletion.create(
-                    model="gpt-4o-mini", messages=_msg(),
+                resp = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role":"system","content":system_prompt},
+                            {"role":"user","content":prompt}],
                     temperature=0.05, max_tokens=200
                 )
-                ans = response["choices"][0]["message"]["content"]
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "o1-preview":
-                response = openai.ChatCompletion.create(
+                resp = client.chat.completions.create(
                     model="o1-preview-2024-09-12",
-                    messages=[{"role": "user", "content": system_prompt + prompt}]
-                )
-                ans = response["choices"][0]["message"]["content"]
-                return re.sub(r"\s+", " ", ans)
-
-            elif model_str == "gpt3.5":
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo", messages=_msg(),
+                    messages=[{"role":"system","content":system_prompt},
+                            {"role":"user","content":prompt}],
                     temperature=0.05, max_tokens=200
                 )
-                ans = response["choices"][0]["message"]["content"]
+                ans = resp.choices[0].message.content
+                return re.sub(r"\s+", " ", ans)
+
+
+            elif model_str == "gpt3.5":
+                resp = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role":"system","content":system_prompt},
+                            {"role":"user","content":prompt}],
+                    temperature=0.05, max_tokens=200
+                )
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "claude3.5sonnet":
@@ -136,12 +186,15 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "gpt4o":
-                response = openai.ChatCompletion.create(
-                    model="gpt-4o", messages=_msg(),
+                resp = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role":"system","content":system_prompt},
+                            {"role":"user","content":prompt}],
                     temperature=0.05, max_tokens=200
                 )
-                ans = response["choices"][0]["message"]["content"]
+                ans = resp.choices[0].message.content
                 return re.sub(r"\s+", " ", ans)
+                
 
             elif model_str == 'llama-2-70b-chat':
                 output = replicate.run(
@@ -656,7 +709,9 @@ def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
 
 
 def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None, mohs_llm='gpt4'):
-    openai.api_key = api_key
+    os.environ["OPENAI_API_KEY"] = api_key
+    global client
+    client = OpenAI()
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
     if patient_llm in replicate_llms or derm_llm in replicate_llms:
