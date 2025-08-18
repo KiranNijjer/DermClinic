@@ -17,7 +17,7 @@ def inference_huggingface(prompt, pipe):
     return response
 
 
-def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0,
+def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                 image_requested=False, scene=None, max_prompt_len=2**14, clip_prompt=False):
     SUPPORTED = {
         "gpt-5", "gpt-5-mini", "gpt-5-nano",
@@ -172,6 +172,7 @@ def query_model(model_str, prompt, system_prompt, tries=30, timeout=20.0,
                 raise Exception("Sorry, fixing TODO :3")
 
         except Exception as e:
+            print(f"[query_model:{model_str}] error: {e}")
             time.sleep(timeout)
             continue
 
