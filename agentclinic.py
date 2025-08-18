@@ -39,8 +39,29 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
             # -------------- Vision branch --------------
             if image_requested:
                 # GPT-5 (nano/mini/base) handled as text here; block vision for them explicitly
-                if model_str in {"gpt-5","gpt-5-mini","gpt-5-nano"}:
-                    raise ValueError(f"{model_str} not enabled for vision in this helper. Use gpt-4o/mini.")
+                if model_str in {"gpt-5", "gpt-5-mini", "gpt-5-nano"}:
+                    # GPT-5 vision via Responses API
+                    resp = client.responses.create(
+                        model=model_str,  # e.g., "gpt-5"
+                        input=[{
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "input_image",
+                                    # Use either a URL or base64
+                                    "image_url": {"url": scene.image_url}  # e.g., "https://.../image.png"
+                                    # OR, for base64:
+                                    # "image_data": {"b64": scene.image_b64}
+                                }
+                            ]
+                        }],
+                        temperature=0.05,
+                        max_output_tokens=200,
+                    )
+                    # Responses API returns messages under output_text (or output[0].content etc. depending on SDK)
+                    ans = getattr(resp, "output_text", None) or resp.output[0].content[0].text
+                    return re.sub(r"\s+", " ", ans)
                 if model_str == "gpt4v":
                     resp = client.chat.completions.create(
                         model="gpt-4v",  # or "gpt-4o-mini"
