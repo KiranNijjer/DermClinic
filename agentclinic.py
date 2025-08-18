@@ -4,7 +4,7 @@ import os
 from transformers import pipeline
 import re, random, time, json, replicate, os
 from openai import OpenAI
-client = None  # will be initialized in main()
+client = OpenAI(api_key=(""))  # will be initialized in main()
 
 llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
@@ -709,8 +709,6 @@ def compare_results(diagnosis, correct_diagnosis, moderator_llm, mod_pipe):
 
 
 def main(api_key, replicate_api_key, inf_type, derm_bias, patient_bias, derm_llm, patient_llm, pathologist_llm, moderator_llm, num_scenarios, dataset, img_request, total_inferences, anthropic_api_key=None, mohs_llm='gpt4'):
-    global client
-    client = OpenAI(api_key=(api_key or os.getenv("OPENAI_API_KEY") or ""))
     anthropic_llms = ["claude3.5sonnet"]
     replicate_llms = ["llama-3-70b-instruct", "llama-2-70b-chat", "mixtral-8x7b"]
     if patient_llm in replicate_llms or derm_llm in replicate_llms:
