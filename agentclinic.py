@@ -162,7 +162,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=15.0,
 
             if model_str == "gpt4":
                 resp = client.chat.completions.create(
-                model="gpt-4",  # use a current model id
+                model="gpt-4.1",  # use a current model id
                 messages=[{"role":"system","content":system_prompt},
                         {"role":"user","content":prompt}],
                 temperature=0.05, max_tokens=200
