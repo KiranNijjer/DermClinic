@@ -4,8 +4,7 @@ import os
 from transformers import pipeline
 import re, random, time, json, replicate, os
 from openai import OpenAI
-client =  # will be initialized in main()
-
+client =  
 llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
 mixtral_url = "mistralai/mixtral-8x7b-instruct-v0.1"
@@ -20,7 +19,7 @@ def inference_huggingface(prompt, pipe):
     return response
 
 
-def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
+def query_model(model_str, prompt, system_prompt, tries=3, timeout=15.0,
                 image_requested=False, scene=None, max_prompt_len=2**14, clip_prompt=False):
     global client 
     SUPPORTED = {
@@ -69,7 +68,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": [
                                 {"type": "text", "text": prompt},
-                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                                {"type": "image_url", "image_url": {"url": scene.image_url}},
                             ]},
                         ],
                         temperature=0.05,
@@ -84,7 +83,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": [
                                 {"type": "text", "text": prompt},
-                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                                {"type": "image_url", "image_url": {"url": scene.image_url}},
                             ]},
                         ],
                         temperature=0.05,
@@ -99,7 +98,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": [
                                 {"type": "text", "text": prompt},
-                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                                {"type": "image_url", "image_url": {"url": scene.image_url}},
                             ]},
                         ],
                         temperature=0.05,
@@ -114,7 +113,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=3.0,
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": [
                                 {"type": "text", "text": prompt},
-                                {"type": "input_image", "image_url": {"url": scene.image_url}},
+                                {"type": "image_url", "image_url": {"url": scene.image_url}},
                             ]},
                         ],
                         temperature=0.05,
