@@ -4,7 +4,7 @@ import os
 from transformers import pipeline
 import re, random, time, json, replicate, os
 from openai import OpenAI
-client =  
+client 
 llama2_url = "meta/llama-2-70b-chat"
 llama3_url = "meta/meta-llama-3-70b-instruct"
 mixtral_url = "mistralai/mixtral-8x7b-instruct-v0.1"
@@ -25,7 +25,7 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=15.0,
     SUPPORTED = {
         "gpt-5", "gpt-5-mini", "gpt-5-nano",
         "gpt4", "gpt3.5", "gpt4o", "gpt-4o-mini", "gpt4v",
-        "claude3.5sonnet", "o1-preview",
+        "claude3.5sonnet", "o1",
         "llama-2-70b-chat", "mixtral-8x7b", "llama-3-70b-instruct"
     }
     if model_str not in SUPPORTED and "_HF" not in model_str:
@@ -191,15 +191,15 @@ def query_model(model_str, prompt, system_prompt, tries=3, timeout=15.0,
                 return re.sub(r"\s+", " ", ans)
 
             elif model_str == "o1":
-                resp = client.chat.completions.create(
-                    model="o1",
-                    messages=[{"role":"system","content":system_prompt},
-                            {"role":"user","content":prompt}],
-                    temperature=0.05, max_tokens=200
+                resp = client.responses.create(
+                 model="o1",
+                 input=[
+                  {"role": "system", "content": system_prompt},
+                  {"role": "user", "content": prompt}
+                  ],
                 )
-                ans = resp.choices[0].message.content
+                ans = resp.output_text
                 return re.sub(r"\s+", " ", ans)
-
 
             elif model_str == "gpt3.5":
                 resp = client.chat.completions.create(
